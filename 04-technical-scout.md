@@ -325,3 +325,97 @@ steered_model.add(layer_idx=20, coeff=0.4, text="logical")
 4. **Norms Engine v2.** В свете всего вышесказанного.
 
 После этого скаута проект перестаёт быть «исследованием в облаке» и становится **проектом с понятной материальной базой**.
+
+---
+
+# Приложение A: Вторая волна разведки (6 параллельных агентов)
+
+**Дата:** 2026-04-27, расширение скаута.
+**Назначение:** карта подсказок 2025-2026, из которых собирается архитектура. Только то, что меняет решения.
+
+## A.1. Сдвиги ландшафта
+
+- **Sleep-time compute стал индустриальным паттерном.** Lin et al. (Letta+UCB, [arxiv 2504.13171](https://arxiv.org/abs/2504.13171)) — формализован, ~5× снижение test-time compute. Letta sleep-time agents и Anthropic Claude Code AutoDream — в проде. Снимает риск №1 из ADR-003 («Принцип 4 непомерно дорогой»): постоянный поток дёшев, тяжёлая обработка ночью.
+- **Activation steering production-ready на 7B.** EasySteer ([arxiv 2509.25175](https://arxiv.org/abs/2509.25175)), Goodfire SAE для Llama-3.1-8B ([blog](https://www.goodfire.ai/blog/sae-open-source-announcement)), Anthropic Emotion Concepts (апрель 2026, [transformer-circuits](https://transformer-circuits.pub/2026/emotions/index.html)) — 171 активационный паттерн эмоций. Эмпирическое доказательство Принципа 2.
+- **Прямой прецедент Принципа 4.** [«What Do LLM Agents Do When Left Alone?» (2509.21224)](https://arxiv.org/abs/2509.21224) — continuous ReAct + key-value память + similarity feedback. Параметры: T=0.0-0.2 main, повышенная для divergent, similarity-drop при ≥80% cosine. Берём напрямую.
+- **Дивергенция-конвергенция оформлена.** [CreativeDC (2512.23601)](https://arxiv.org/abs/2512.23601): декопля даёт +16.7% diversity, +63.5% novelty.
+- **SSoT решает фейковую стохастичность.** [String Seed of Thought (2510.21150)](https://arxiv.org/html/2510.21150) — без него «случайные мысли» мейнстримные. Основа «затравок подсознания».
+
+## A.2. Память и сон (П3)
+
+- **LightMem** ([arxiv 2510.18866](https://arxiv.org/html/2510.18866v1)) — Atkinson-Shiffrin (sensory→STM→LTM), офлайн-консолидация LTM. **−117× токенов, −159× API calls, −12× времени.** Базовая платформа П3.
+- **MIRROR** ([arxiv 2506.00430](https://arxiv.org/abs/2506.00430)) — O(1) reconstructive narrative каждое утро вместо O(n) аккумуляции. 21% relative improvement. Прямая реализация «утро вечера мудренее».
+- **Active Dreaming Memory** (ADM, engrxiv 5919) — counterfactual verification перед записью в LTM. 95% retention после 500 эпизодов.
+- **STABLE** ([arxiv 2510.16089](https://arxiv.org/html/2510.16089v1)) — gated continual LoRA на Qwen-2.5-7B. **Тестировали только 8 итераций** — данных о 50+ ночах нет ни у кого. → nightly LoRA в v2, не в MVP.
+- **ID-RAG** для генеративных агентов — явное retrieval идентичности на каждом шаге, +8-12% identity recall на 7 timesteps. Periodic re-grounding.
+
+## A.3. Субъективный мир (П1) и retraction
+
+- **AriGraph** ([arxiv 2407.04363](https://arxiv.org/abs/2407.04363)) — KG, построенный самим агентом из его восприятий. Шаблон субъективного мира.
+- **SCG-MEM** ([arxiv 2604.20117](https://arxiv.org/pdf/2604.20117)) — Piagetian assimilation/accommodation.
+- **BeliefShift** ([arxiv 2603.23848](https://arxiv.org/abs/2603.23848)) — три трека: Temporal Belief Consistency, Contradiction Detection, Evidence-Driven Revision. Их вывод: «models that personalize aggressively resist drift poorly, while factually grounded models miss legitimate belief updates» — ровно наша дилемма.
+- **Preregistered Belief Revision Contracts** ([arxiv 2604.15558](https://arxiv.org/html/2604.15558)) — non-fallback step accepted only with preregistered trigger + witness. Основа trigger-only hard revision.
+- **Provenance tagging** ([arxiv 2506.17331](https://arxiv.org/pdf/2506.17331)) — provenance-tag на каждое убеждение. В литературе для misinformation detection; у нас — для lazy contradiction lowering.
+- **Confidence decay (Weibull half-life)** — hippo-memory, FAMA. Естественное угасание неподтверждаемых убеждений.
+
+**Главный обход (наш):** retraction-механизм из четырёх слоёв — confidence decay по умолчанию + contradiction flag во сне + trigger-only hard revision + инвариантный эмоциональный осадок. Источник доверия — согласованность с собственными восприятиями NPC, не объективная истина.
+
+## A.4. Steering: persona vectors > SAE на 7B
+
+Прямое сравнение ([arxiv 2502.16681](https://arxiv.org/pdf/2502.16681)): linear probes/persona vectors дают **88% editing success vs 41% у SAE-probes**. → persona vectors как primary, SAE — только для диагностики.
+
+- **EmotionVector** ([github](https://github.com/xuanfengzu/EmotionVector)) — готовые векторы для Qwen2.5-7B-Instruct, 5 эмоций × 28 слоёв. Берём для VAD.
+- **jukofyork/control-vectors** ([github](https://github.com/jukofyork/control-vectors)) — production-quality генератор GGUF control vectors через eigendecomposition.
+- **CAST (Conditional Activation Steering, ICLR 2025)** — стирин включается только в нужных контекстах. Решает «steering всегда → drift».
+- **Conceptors** ([NeurIPS 2025](https://openreview.net/forum?id=0Yu0eNdHyV)) — Boolean-алгебра над концептами в активационном пространстве. Прямая реализация «концепт = композиция мелких параметров». Отложено в v2.
+
+**Риски стиринга:** [The Rogue Scalpel (2509.22067)](https://arxiv.org/abs/2509.22067) — даже случайный вектор ломает alignment. [PERSIST (AAAI 2026)](https://arxiv.org/abs/2508.04826) — личностная нестабильность LLM **архитектурна**. → ограничивать коэффициенты, использовать CAST, тестировать каждую конфигурацию.
+
+## A.5. Цели как мысли (П4)
+
+- **Inner Thoughts Framework** ([arxiv 2501.00383](https://arxiv.org/abs/2501.00383), CHI 2025) — 5 стадий генерации скрытых мыслей. Узко (чатботы), но прототип.
+- **2509.21224** — параметры берём напрямую: T=0.0-0.2 main, повышенная для divergent, 1200-4096 max_tokens, similarity drop ≥80%.
+- **DPT-Agent dual process** ([arxiv 2502.11882](https://arxiv.org/abs/2502.11882)) — System 1 / System 2 в LLM-агентах.
+- **Intrinsic Metacognitive Learning** ([openreview](https://openreview.net/forum?id=4KhDd0Ozqe)) — knowledge + planning + evaluation. Триада подходит для нашего фильтра.
+
+## A.6. Технический стек — что доказано
+
+- **Рантайм:** llama.cpp побеждает vLLM для профиля «1-2 NPC, короткие генерации, persistent prefix». Бенчмарки: [Red Hat сент 2025](https://developers.redhat.com/articles/2025/09/30/vllm-or-llamacpp-choosing-right-llm-inference-engine-your-use-case), [BSWEN март 2026](https://docs.bswen.com/blog/2026-03-15-vllm-vs-llamacpp-speed/).
+- **Persistence характера:** llama-server `--cram` ([Discussion #20574](https://github.com/ggml-org/llama.cpp/discussions/20574)) + slot save/restore ([Discussion #20572](https://github.com/ggml-org/llama.cpp/discussions/20572)).
+- **Activation steering в llama.cpp:** [PR #5970](https://github.com/ggml-org/llama.cpp/pull/5970) смержен с 2024. Hot-swap через API ещё не смержен ([Issue #10685](https://github.com/ggml-org/llama.cpp/issues/10685)) — форк сервера на ~200 строк C++.
+- **NPC entity на Fabric 1.21+:** [PuppetPlayers](https://github.com/senseiwells/PuppetPlayers) — FakePlayer-обёртка, наследует от ServerPlayerEntity. Полные player-mechanics включая сон в кровати.
+- **Существующие моды как референс:** [Mindcraft](https://github.com/kolbytn/mindcraft), [sailex428/AI-NPC](https://github.com/sailex428/AI-NPC), [shasankp000/AI-Player](https://github.com/shasankp000/AI-Player).
+
+## A.7. Метрики «живости»
+
+- **Persona Drift / Identity Drift** ([arxiv 2402.10962](https://arxiv.org/html/2402.10962v1), [2412.00804](https://arxiv.org/abs/2412.00804)) — проекция активаций на persona axis. Падение 20-40% за 10-15 ходов в тяжёлых сценариях.
+- **Q&A consistency** ([arxiv 2511.00222](https://arxiv.org/html/2511.00222v1)) — prompt-to-line, line-to-line, Q&A. Multi-turn RL снижает inconsistency на 55%+.
+- **Agent Stability Index** ([arxiv 2601.04170](https://arxiv.org/abs/2601.04170)) — 12 метрик.
+- **PersonaGym + PersonaScore** (ACL Findings 2025) — пять осей.
+- **CharacterBench** — 11 dimensions × 6 групп. CharacterJudge коррелирует с человеком на 0.68.
+
+**Что придётся изобретать:** никто не разделил «живой» vs «просто разговорчивый» — нет метрики проактивности. Под Принцип 4 нет готового. → Lifeness Triad (см. 05-architecture-v0.md).
+
+## A.8. Параметры характера — сколько нужно
+
+- **Big Five в LLM** ([arxiv 2502.05248](https://arxiv.org/pdf/2502.05248)) — достаточен для базы. Agreeableness и Extraversion — несущие.
+- **HEXACO** ([arxiv 2508.00742](https://arxiv.org/html/2508.00742)) — добавление Honesty-Humility критично для сценариев с обманом. → берём HEXACO, не Big Five.
+- **Persona Vectors (Anthropic)** работали с 10-20 trait-axes.
+- **«Patterns, Not People»** (Turing CETAS 2025) — Big Five достаточен для стабильных кластеров; больше — diminishing returns.
+
+**Эмпирика сходится:** ~10 ядерных + 8-10 на каждую сильную привязанность ≈ 30-40 параметров для одного NPC.
+
+## A.9. Качество модели и параметры инференса
+
+Бенчмарки [Cognitive Agents in Urban Mobility (PMC sept 2025)](https://pmc.ncbi.nlm.nih.gov/articles/PMC12451180/): Qwen2.5-7B справляется с симуляцией городской толпы 20 дней. Прямой прецедент.
+
+GBNF grammar-constrained output: модели <7B плохо держат структурированный вывод даже с grammar ([arxiv 2501.10868](https://arxiv.org/html/2501.10868v1)) — ещё аргумент за 7B, не 3B.
+
+## A.10. Что осталось неизвестным после двух волн
+
+1. **Long-horizon coherence Qwen-7B на 100+ часов игры** — никто не мерил.
+2. **Persona vectors на квантованных моделях** — ни одной публичной демонстрации (Эксперимент 1).
+3. **Subjective consolidation на 50+ ночей** — без эмпирики.
+4. **Эмоциональный осадок vs характер vs память** — границы не формализованы.
+
+Это и есть фронт собственных экспериментов проекта.
