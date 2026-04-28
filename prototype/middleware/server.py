@@ -18,6 +18,7 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 import uvicorn
 
+from . import __version__
 from .character import CharacterState
 from .cognitive_loop import CognitiveAgent
 from .config import load_config
@@ -71,9 +72,14 @@ log = logging.getLogger("wanderer")
 async def lifespan(app: FastAPI):
     cfg = state.config or {}
     llm_cfg = cfg.get("llm", {})
-    state.llm_client = LlamaServerClient(
-        base_url=llm_cfg.get("base_url", "http://localhost:8080"),
-    )
+    base_url = llm_cfg.get("base_url", "http://localhost:8080")
+    model_name = llm_cfg.get("model_name", "t-tech/T-lite-it-2.1:Q4_K_M")
+    log.info("=" * 60)
+    log.info(f"  Living NPCs middleware v{__version__}")
+    log.info(f"  Model:    {model_name}")
+    log.info(f"  Backend:  {base_url}")
+    log.info("=" * 60)
+    state.llm_client = LlamaServerClient(base_url=base_url)
     if not await state.llm_client.health():
         log.warning("llama-server недоступен на старте — продолжаем, но запросы упадут")
 
@@ -102,7 +108,15 @@ app = FastAPI(title="Living NPCs middleware", lifespan=lifespan)
 @app.get("/health")
 async def health() -> Dict[str, Any]:
     llm_ok = await state.llm_client.health() if state.llm_client else False
-    return {"agent_ready": state.agent is not None, "llm_ok": llm_ok}
+    cfg = state.config or {}
+    llm_cfg = cfg.get("llm", {})
+    return {
+        "version": __version__,
+        "agent_ready": state.agent is not None,
+        "llm_ok": llm_ok,
+        "model": llm_cfg.get("model_name"),
+        "backend": llm_cfg.get("base_url"),
+    }
 
 
 @app.get("/v1/models")
