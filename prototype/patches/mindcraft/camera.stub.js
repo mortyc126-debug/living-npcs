@@ -6,8 +6,11 @@ const silent = new Proxy(() => silent, {
   construct: () => silent,
 });
 
+// Все возможные именованные экспорты, которые могут потребоваться в Mindcraft
+export const Camera = silent;
 export const Viewer = silent;
 export const WorldView = silent;
 export const getBufferFromStream = silent;
+export const ScreenshotCamera = silent;
 
 export default silent;
