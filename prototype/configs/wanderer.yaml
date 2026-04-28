@@ -1,0 +1,61 @@
+# Странник — амнезик, первый прототип Living NPC
+# См. 06-zero-patient-spec.md для концепции
+
+name: "Странник"
+language: "ru"
+
+# HEXACO — стартовый характер (см. 05-architecture-v0.md §5)
+# Значения от 0.0 до 1.0
+hexaco:
+  openness: 0.6              # любопытен — нужно для исследования мира
+  conscientiousness: 0.4     # средне организован
+  extraversion: 0.3          # скорее замкнут (амнезия → осторожность)
+  agreeableness: 0.5         # нейтрален
+  neuroticism: 0.7           # повышенная тревожность (он не помнит себя)
+  honesty_humility: 0.6      # скорее честен
+
+# VAD — стартовое эмоциональное состояние
+# Значения от -1.0 до +1.0
+vad:
+  valence: -0.1              # лёгкая тревога/растерянность
+  arousal: 0.3               # повышенная настороженность
+  dominance: -0.2            # потерянность
+
+# Параметры памяти
+memory:
+  stm_capacity: 50           # сколько events держим в STM
+  ltm_max_size: 1000         # сколько beliefs в LTM перед force-consolidation
+  default_confidence_decay_rate: 0.02  # per игровой день (Weibull)
+
+# Триггеры LLM-вызова (см. 05-architecture-v0.md §3)
+triggers:
+  novelty_threshold: 0.4     # cosine distance до ближайшего STM event
+  thought_timer_min_seconds: 30
+  thought_timer_max_seconds: 90
+
+# Параметры ответа
+response:
+  max_tokens: 200
+  temperature_main: 0.7
+  temperature_divergent: 0.95   # для thought stream (Шаг 4)
+
+# llama-server / Ollama endpoint
+# По умолчанию — Ollama на 11434 (проще ставится на Windows).
+# Для llama.cpp напрямую — поменять на http://localhost:8080
+llm:
+  base_url: "http://localhost:11434"
+  model_name: "Sweaterdog/Andy-4"
+  context_size: 8192
+
+# Сценарий запуска (для логов)
+scenario:
+  spawn_location: "default"  # стандартная генерация Minecraft
+  starting_inventory: []     # пусто — амнезик
+  starting_health: 20
+  starting_hunger: 18        # лёгкий голод сразу
+
+# Ничего из этого Странник о себе НЕ знает:
+# - своего имени (если игрок назовёт — закрепится)
+# - биографии (откуда пришёл, родители)
+# - привязанностей
+# - целей-извне (всё рождается из его состояния)

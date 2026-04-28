@@ -1,0 +1,22 @@
+# Локальные логи и состояние агента
+logs/
+*.log
+
+# Слоты llama.cpp KV-cache (сохраняются между сессиями)
+slots/
+*.kv
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+.env
+
+# Модели (огромные, не коммитим)
+models/
+*.gguf
+
+# Локальный settings.js Mindcraft (содержит порты/auth)
+mindcraft_config/settings.js
