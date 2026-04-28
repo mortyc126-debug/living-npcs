@@ -78,6 +78,7 @@ async def lifespan(app: FastAPI):
         log.warning("llama-server недоступен на старте — продолжаем, но запросы упадут")
 
     character = CharacterState.from_config(cfg)
+    response_cfg = cfg.get("response", {})
     state.agent = CognitiveAgent(
         name=cfg.get("name", "Странник"),
         character=character,
@@ -85,6 +86,9 @@ async def lifespan(app: FastAPI):
         model_name=llm_cfg.get("model_name", "Sweaterdog/Andy-4"),
         stm_capacity=cfg.get("memory", {}).get("stm_capacity", 50),
         ltm_max_size=cfg.get("memory", {}).get("ltm_max_size", 1000),
+        similarity_threshold=response_cfg.get("similarity_threshold", 0.8),
+        similarity_min_words=response_cfg.get("similarity_min_words", 5),
+        temperature_override=response_cfg.get("temperature_main"),
     )
     log.info(f"Странник готов. HEXACO: {character.hexaco}")
     yield

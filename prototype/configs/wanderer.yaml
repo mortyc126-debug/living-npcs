@@ -36,8 +36,10 @@ triggers:
 # Параметры ответа
 response:
   max_tokens: 200
-  temperature_main: 0.7
+  temperature_main: 0.5         # пониже — меньше шумных самореплик у Andy-4
   temperature_divergent: 0.95   # для thought stream (Шаг 4)
+  similarity_threshold: 0.8     # ≥ → ответ считается дубликатом → "…" (П4 редуц.)
+  similarity_min_words: 5       # короткие реплики не фильтруем
 
 # llama-server / Ollama endpoint
 # По умолчанию — Ollama на 11434 (проще ставится на Windows).
