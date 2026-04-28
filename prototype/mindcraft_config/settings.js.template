@@ -1,29 +1,52 @@
-// Template для settings.js Mindcraft (mindcraft-ce).
+// Settings.js для проекта Living NPCs.
 // Скопировать как settings.js в корне mindcraft-ce.
-// Подробности — https://github.com/mindcraft-ce/mindcraft-ce
+// Базируется на оригинальном settings.js mindcraft-ce, с нашими правками.
 
-export default {
-  "minecraft_version": "1.21.6",
-  "host": "127.0.0.1",
-  "port": 25565,
-  "auth": "offline",                  // для локального тестирования
+const settings = {
+    "minecraft_version": "1.21.6",
+    "host": "127.0.0.1",
+    "port": 25565,
+    "auth": "offline",
 
-  "profiles": [
-    "./profiles/andy_wanderer.json"
-  ],
+    "mindserver_port": 8080,
+    "auto_open_ui": true,
 
-  "load_memory": false,               // мы храним память в middleware, не Mindcraft
-  "init_message": null,               // не давать ботy стартовое задание
-  "only_chat_with": [],               // отвечает всем
-  "language": "ru",
+    "base_profile": "survival",
+    "profiles": [
+        "./profiles/andy_wanderer.json"
+    ],
 
-  "show_bot_views": false,
-  "allow_insecure_coding": false,     // Странник пока не пишет код
-  "code_timeout_mins": 10,
-  "relevant_docs_count": 0,           // RAG отключён на Шаге 1
+    "load_memory": false,
+    "init_message": "",                 // пусто — Странник не получает стартового задания
+    "only_chat_with": [],
 
-  "max_messages": 15,                 // короткое окно — наш middleware всё равно делает свой prompt
-  "verbose_commands": true,
-  "narrate_behavior": true,           // полезно для логов
-  "chat_bot_messages": true
+    "speak": false,
+    "chat_ingame": true,
+    "language": "ru",
+    "render_bot_view": false,           // отключено — наши stub'ы prismarine-viewer
+
+    "allow_insecure_coding": false,
+    "allow_vision": false,              // отключено — наши stub'ы camera
+    "blocked_actions": [
+        "!checkBlueprint",
+        "!checkBlueprintLevel",
+        "!getBlueprint",
+        "!getBlueprintLevel"
+    ],
+    "code_timeout_mins": -1,
+    "relevant_docs_count": 5,
+
+    "max_messages": 15,
+    "num_examples": 2,
+    "max_commands": -1,
+    "show_command_syntax": "full",
+    "narrate_behavior": true,
+    "chat_bot_messages": true,
+
+    "spawn_timeout": 30,
+    "block_place_delay": 0,
+
+    "log_all_prompts": false,           // поставить true для отладки промптов
 };
+
+export default settings;

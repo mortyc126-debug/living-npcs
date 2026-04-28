@@ -33,12 +33,14 @@ class CognitiveAgent:
         name: str,
         character: CharacterState,
         llm: LlamaServerClient,
+        model_name: str = "Sweaterdog/Andy-4",
         stm_capacity: int = 50,
         ltm_max_size: int = 1000,
     ):
         self.name = name
         self.character = character
         self.llm = llm
+        self.model_name = model_name
         self.stm = STM(capacity=stm_capacity)
         self.ltm = LTM(max_size=ltm_max_size)
         self.last_perception: str = "(пока не понятно где ты)"
@@ -92,10 +94,10 @@ class CognitiveAgent:
 
         result = await self.llm.chat_completion(
             messages=messages,
+            model=self.model_name,
             max_tokens=max_tokens,
             temperature=temperature,
-            slot_id=0,  # Странник в слоте 0; Шаг 4 — слот 1 для thought stream
-            cache_prompt=True,
+            # slot_id и cache_prompt — только для llama.cpp; Ollama их игнорирует
         )
 
         # OpenAI-формат: choices[0].message.content

@@ -17,22 +17,27 @@ class LlamaServerClient:
     async def chat_completion(
         self,
         messages: List[Dict[str, str]],
+        model: Optional[str] = None,
         max_tokens: int = 200,
         temperature: float = 0.7,
         stop: Optional[List[str]] = None,
         slot_id: Optional[int] = None,
-        cache_prompt: bool = True,
+        cache_prompt: Optional[bool] = None,
     ) -> Dict[str, Any]:
         payload: Dict[str, Any] = {
             "messages": messages,
             "max_tokens": max_tokens,
             "temperature": temperature,
-            "cache_prompt": cache_prompt,
         }
+        if model is not None:
+            payload["model"] = model
         if stop:
             payload["stop"] = stop
+        # llama.cpp-специфичные параметры — Ollama их игнорирует
         if slot_id is not None:
             payload["id_slot"] = slot_id
+        if cache_prompt is not None:
+            payload["cache_prompt"] = cache_prompt
 
         url = f"{self.base_url}/v1/chat/completions"
         resp = await self.client.post(url, json=payload)

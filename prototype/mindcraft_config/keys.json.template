@@ -1,0 +1,4 @@
+{
+  "_comment": "Фиктивный ключ — Mindcraft GPT-клиент его требует, но запросы идут на наш middleware (порт 8090), который ключ не проверяет. Скопировать в корень mindcraft-ce как keys.json.",
+  "OPENAI_API_KEY": "sk-fake-not-used"
+}
