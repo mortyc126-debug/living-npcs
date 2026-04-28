@@ -31,7 +31,16 @@ const settings = {
         "!checkBlueprint",
         "!checkBlueprintLevel",
         "!getBlueprint",
-        "!getBlueprintLevel"
+        "!getBlueprintLevel",
+        "!stats",
+        "!nearbyBlocks",
+        "!entities",
+        "!inventory",
+        "!modes",
+        "!savedPlaces",
+        "!viewChest",
+        "!searchForBlock",
+        "!searchForEntity"
     ],
     "code_timeout_mins": -1,
     "relevant_docs_count": 5,
@@ -40,7 +49,7 @@ const settings = {
     "num_examples": 2,
     "max_commands": -1,
     "show_command_syntax": "full",
-    "narrate_behavior": true,
+    "narrate_behavior": false,        // выкл — Странник не рассказывает что делает
     "chat_bot_messages": true,
 
     "spawn_timeout": 30,
