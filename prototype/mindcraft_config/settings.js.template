@@ -11,6 +11,7 @@ export default {
   "profiles": [
     "./profiles/andy_wanderer.json"
   ],
+  "base_profile": "survival",         // survival | assistant | creative | god_mode
 
   "load_memory": false,               // мы храним память в middleware, не Mindcraft
   "init_message": null,               // не давать ботy стартовое задание
