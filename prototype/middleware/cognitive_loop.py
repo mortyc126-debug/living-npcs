@@ -14,6 +14,7 @@ from typing import List, Dict, Any, Optional
 from .character import CharacterState
 from .llm_client import LlamaServerClient
 from .memory import STM, LTM, Event, Source
+from .mindcraft_adapter import parse_user_message, ground_action
 from .prompts import build_system_prompt
 
 
@@ -122,6 +123,9 @@ class CognitiveAgent:
         self.similarity_threshold = similarity_threshold
         self.similarity_min_words = similarity_min_words
         self.temperature_override = temperature_override
+        # Имя последнего реального игрока, говорившего со Странником.
+        # Нужно для action_grounder — чтобы в !followPlayer знать кому следовать.
+        self.last_speaker: Optional[str] = None
 
     def observe(self, perception_text: str, perception_type: str = "saw") -> None:
         """Восприятие → STM. Шаг 1 — простая запись.
@@ -149,17 +153,30 @@ class CognitiveAgent:
         history — диалоговый контекст от Mindcraft (system+user+assistant).
         Мы заменяем первый system на наш собранный, оставляем диалог.
         """
-        # Записываем user_message как восприятие.
-        # Mindcraft в user-сообщении передаёт смесь: восприятие мира + реплику игрока.
-        # На Шаге 1 — упрощённо: всё в STM как perception.
-        self.observe(user_message, perception_type="saw")
+        # Парсим Mindcraft user-message в типизированный вид:
+        # speaker / реплика / системные события.
+        parsed = parse_user_message(user_message)
+        if parsed.speaker:
+            self.last_speaker = parsed.speaker
+        # Системные события (Recent behaviors log, drowning, ...) кладём в STM
+        # как perceptions. Это первый шаг к настоящему восприятию мира.
+        for evt in parsed.system_events:
+            self.observe(evt, perception_type="felt")
+        # Реплика игрока — отдельным событием. Если speaker неизвестен и
+        # реплики нет (пустой SYSTEM-тик) — ничего не пишем.
+        if parsed.text:
+            who = parsed.speaker or "(?)"
+            self.observe(f"{who}: {parsed.text}", perception_type="heard")
 
         # Собираем наш system prompt — характер + STM + LTM.
+        # perception_summary даём не сырой dump от Mindcraft, а реплику игрока.
+        # State мира пока пустой — это задача B2 (perception narrator).
+        perception = parsed.text or (parsed.system_events[0] if parsed.system_events else "")
         system_prompt = build_system_prompt(
             self.character,
             self.stm,
             self.ltm,
-            perception_summary=user_message[:500],
+            perception_summary=perception[:500] or "(тихо)",
         )
 
         # Реконструируем messages: наш system + diaлоговая история без system.
@@ -168,7 +185,10 @@ class CognitiveAgent:
             for m in history:
                 if m.get("role") in ("user", "assistant"):
                     messages.append(m)
-        messages.append({"role": "user", "content": user_message})
+        # В user-роль кладём очищенный текст (без "***" и SYSTEM-префиксов),
+        # чтобы LLM не отвлекался на Mindcraft-артефакты.
+        clean_user = parsed.text or " ".join(parsed.system_events) or user_message
+        messages.append({"role": "user", "content": clean_user})
 
         effective_temp = (
             self.temperature_override
@@ -217,11 +237,27 @@ class CognitiveAgent:
         if not cleaned:
             cleaned = "…"
 
+        # 4) Action grounding: если в narrative-ответе есть намерение движения
+        # ("иду", "стою", "отойду") — дописываем одну Mindcraft-команду.
+        # Это мост между "живой речью" и mineflayer-skill вызовом.
+        # Модель сама команд не пишет (в prompt разрешено говорить о намерении
+        # своими словами), middleware "читает между строк".
+        action = ground_action(cleaned, self.last_speaker)
+        final = f"{cleaned} {action}" if action else cleaned
+
         # Записываем собственный ответ в STM как "сказал/сделал".
+        # В STM кладём именно cleaned (без !command) — для similarity-фильтра
+        # и для будущего нарратива "что я сказал".
         self.stm.add(Event(
             timestamp=time.time(),
             perception_type="said",
             content=cleaned[:300],
         ))
+        if action:
+            self.stm.add(Event(
+                timestamp=time.time(),
+                perception_type="did",
+                content=action,
+            ))
 
-        return cleaned
+        return final
