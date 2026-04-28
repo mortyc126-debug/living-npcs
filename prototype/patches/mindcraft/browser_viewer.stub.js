@@ -7,4 +7,9 @@ const silent = new Proxy(() => silent, {
   construct: () => silent,
 });
 
+// Все возможные именованные экспорты, которые могут потребоваться в Mindcraft
+export const addBrowserViewer = silent;
+export const BrowserViewer = silent;
+export const startViewer = silent;
+
 export default silent;
