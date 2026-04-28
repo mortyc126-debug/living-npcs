@@ -39,10 +39,12 @@ response:
   temperature_main: 0.7
   temperature_divergent: 0.95   # для thought stream (Шаг 4)
 
-# llama-server endpoint
+# llama-server / Ollama endpoint
+# По умолчанию — Ollama на 11434 (проще ставится на Windows).
+# Для llama.cpp напрямую — поменять на http://localhost:8080
 llm:
-  base_url: "http://localhost:8080"
-  model_name: "andy-4-q4-k-m"
+  base_url: "http://localhost:11434"
+  model_name: "Sweaterdog/Andy-4"
   context_size: 8192
 
 # Сценарий запуска (для логов)

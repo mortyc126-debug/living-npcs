@@ -40,11 +40,15 @@ class LlamaServerClient:
         return resp.json()
 
     async def health(self) -> bool:
-        try:
-            resp = await self.client.get(f"{self.base_url}/health", timeout=5.0)
-            return resp.status_code == 200
-        except Exception:
-            return False
+        """Универсальный health-check: пробуем эндпоинты llama.cpp и Ollama."""
+        for path in ("/health", "/api/tags", "/v1/models"):
+            try:
+                resp = await self.client.get(f"{self.base_url}{path}", timeout=5.0)
+                if resp.status_code == 200:
+                    return True
+            except Exception:
+                continue
+        return False
 
     async def slot_save(self, slot_id: int, filename: str) -> bool:
         """Сохранение KV-cache слота на диск (для persistence характера)."""

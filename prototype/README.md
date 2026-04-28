@@ -56,61 +56,101 @@ prototype/
 
 ---
 
-## Setup (high-level)
+## Setup на Windows (рекомендуется — проще)
 
-### 1. Поставить llama.cpp
+Стек: **Ollama** (вместо llama.cpp напрямую) + **Python middleware** + **Mindcraft** + **Minecraft 1.21.6 server**.
 
-```bash
-git clone https://github.com/ggml-org/llama.cpp
-cd llama.cpp && make GGML_CUDA=1
-```
+Ollama — это обёртка вокруг llama.cpp с автоматической установкой и управлением моделями. Под капотом использует тот же llama.cpp; для Шага 1 разницы нет. Для Шага 3 (control vectors) при необходимости перейдём на llama.cpp напрямую.
+
+### 1. Поставить Ollama
+- Скачать: https://ollama.com/download/windows
+- Установить (next-next-next), Ollama сама стартует в фоне на `localhost:11434`
 
 ### 2. Скачать Andy-4
-
-```bash
-# через HuggingFace
-wget https://huggingface.co/Sweaterdog/Andy-4/resolve/main/Andy-4.Q4_K_M.gguf
+В cmd или PowerShell:
+```cmd
+ollama pull Sweaterdog/Andy-4
 ```
-
-### 3. Запустить llama-server
-
-```bash
-./scripts/start_llama_server.sh
-# слушает на :8080
+~5 GB. Проверить:
+```cmd
+ollama run Sweaterdog/Andy-4 "Hello"
 ```
+(Ctrl+C для выхода)
 
-### 4. Запустить middleware
+### 3. Поставить Python 3.11+ и Node.js LTS
+- Python: https://www.python.org/downloads/ (галочку «Add Python to PATH»)
+- Node.js: https://nodejs.org/en/download
 
-```bash
-pip install -r requirements.txt
-./scripts/start_middleware.sh
-# слушает на :8090, прокидывает в llama-server :8080
-```
-
-### 5. Поставить Mindcraft
-
-```bash
+### 4. Поставить Mindcraft
+```cmd
+cd C:\Users\sushk\Downloads
 git clone https://github.com/mindcraft-ce/mindcraft-ce
 cd mindcraft-ce
 npm install
-# скопировать mindcraft_config/settings.js.template как settings.js
-# скопировать mindcraft_config/andy_wanderer.json в profiles/
+```
+Скопировать настройки:
+```cmd
+copy ..\living-npcs\prototype\mindcraft_config\settings.js.template settings.js
+copy ..\living-npcs\prototype\mindcraft_config\andy_wanderer.json profiles\andy_wanderer.json
 ```
 
-### 6. Запустить Minecraft 1.21.6 server (vanilla)
+### 5. Запустить Minecraft 1.21.6 server (vanilla)
+- Скачать server.jar для 1.21.6 с https://www.minecraft.net/en-us/download/server
+- В новой папке запустить, принять EULA (`eula=true` в `eula.txt`)
+- В `server.properties` поставить `online-mode=false` (для offline-режима Mindcraft)
 
-В отдельном терминале — обычный Minecraft server.
+### 6. Три терминала параллельно
 
-### 7. Запустить Mindcraft
+**Терминал 1 — проверка Ollama:**
+```cmd
+cd C:\Users\sushk\Downloads\living-npcs\prototype
+scripts\windows\check_ollama.bat
+```
 
+**Терминал 2 — middleware:**
+```cmd
+cd C:\Users\sushk\Downloads\living-npcs\prototype
+scripts\windows\start_middleware.bat
+```
+
+**Терминал 3 — Mindcraft:**
+```cmd
+cd C:\Users\sushk\Downloads\living-npcs\prototype
+scripts\windows\start_mindcraft.bat
+```
+
+### 7. Запустить Minecraft client
+- Версия 1.21.6
+- Multiplayer → Direct Connection → `localhost:25565`
+- Странник должен появиться в игре
+
+---
+
+## Setup на Linux/Mac (через llama.cpp напрямую)
+
+Используется когда нужны slot save/restore или control vectors (Шаги 3-5).
+
+### 1. Поставить llama.cpp
 ```bash
-./scripts/start_mindcraft.sh
-# Странник появится в игре
+git clone https://github.com/ggml-org/llama.cpp
+cd llama.cpp && cmake -B build -DGGML_CUDA=ON && cmake --build build --config Release -j
 ```
 
-### 8. Подключиться к серверу
+### 2. Скачать Andy-4
+```bash
+mkdir models
+wget -O models/Andy-4.Q4_K_M.gguf https://huggingface.co/Sweaterdog/Andy-4/resolve/main/Andy-4.Q4_K_M.gguf
+```
 
-Запустить Minecraft client → Multiplayer → localhost.
+### 3. Изменить wanderer.yaml
+В `configs/wanderer.yaml` поменять `base_url` на `http://localhost:8080`.
+
+### 4. Три терминала
+```bash
+./scripts/start_llama_server.sh    # llama-server :8080
+./scripts/start_middleware.sh      # middleware :8090
+./scripts/start_mindcraft.sh       # Mindcraft → Minecraft
+```
 
 ---
 
