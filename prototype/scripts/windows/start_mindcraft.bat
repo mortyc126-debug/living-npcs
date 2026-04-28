@@ -20,6 +20,14 @@ if not exist "%PROFILE_DST%" (
     echo Profile скопирован: %PROFILE_DST%
 )
 
+REM Чистим сохранённое состояние Mindcraft. У нас своя память в middleware
+REM (STM/LTM в Python), а Mindcraft восстанавливает self_prompter из этого
+REM файла даже когда self_prompter заглушен — лишний мусор в context.
+if exist "%MINDCRAFT_DIR%\bots\Wanderer\memory.json" (
+    del /Q "%MINDCRAFT_DIR%\bots\Wanderer\memory.json"
+    echo [reset] bots\Wanderer\memory.json удалён.
+)
+
 cd /d "%MINDCRAFT_DIR%"
 echo Запуск Mindcraft...
 npm start

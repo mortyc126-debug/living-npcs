@@ -26,7 +26,8 @@ INFO_COMMANDS = {
     "!getBlueprint", "!getBlueprintLevel",
     # Управление режимами/новый код — модель часто галлюцинирует
     # несуществующие моды и зацикливается на ошибках.
-    "!setMode", "!newAction", "!setGoal", "!endGoal",
+    # !goal вооружает self_prompter (см. patches/mindcraft/self_prompter.stub.js).
+    "!setMode", "!newAction", "!goal", "!endGoal",
 }
 
 _CMD_RE = re.compile(r"!\w+(?:\([^)]*\))?", re.UNICODE)
@@ -104,7 +105,7 @@ class CognitiveAgent:
         name: str,
         character: CharacterState,
         llm: LlamaServerClient,
-        model_name: str = "Sweaterdog/Andy-4",
+        model_name: str = "t-tech/T-lite-it-2.1:Q4_K_M",
         stm_capacity: int = 50,
         ltm_max_size: int = 1000,
         similarity_threshold: float = 0.8,

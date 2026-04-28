@@ -43,7 +43,7 @@ const settings = {
         "!searchForEntity",
         "!setMode",
         "!newAction",
-        "!setGoal",
+        "!goal",
         "!endGoal"
     ],
     "code_timeout_mins": -1,

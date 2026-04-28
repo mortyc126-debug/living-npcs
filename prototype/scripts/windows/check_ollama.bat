@@ -1,5 +1,5 @@
 @echo off
-REM Проверка что Ollama запущена и Andy-4 доступен.
+REM Проверка что Ollama запущена и t-tech/T-lite-it-2.1 доступен.
 REM Ollama запускается автоматически после установки, обычно на :11434.
 
 echo Проверяем Ollama...
@@ -12,13 +12,13 @@ if errorlevel 1 (
 )
 echo [OK] Ollama работает.
 
-echo Проверяем что Andy-4 скачан...
-curl.exe -s http://localhost:11434/api/tags | findstr /C:"Sweaterdog/Andy-4" >nul
+echo Проверяем что t-tech/T-lite-it-2.1 скачан...
+curl.exe -s http://localhost:11434/api/tags | findstr /C:"T-lite-it-2.1" >nul
 if errorlevel 1 (
-    echo [!] Sweaterdog/Andy-4 не найден.
-    echo     Скачай: ollama pull Sweaterdog/Andy-4
+    echo [!] t-tech/T-lite-it-2.1 не найден.
+    echo     Скачай: ollama pull t-tech/T-lite-it-2.1:Q4_K_M
     exit /b 1
 )
-echo [OK] Andy-4 на месте.
+echo [OK] T-lite-it-2.1 на месте.
 echo.
 echo Можно запускать middleware: scripts\windows\start_middleware.bat

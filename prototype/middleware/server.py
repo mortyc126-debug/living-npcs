@@ -83,7 +83,7 @@ async def lifespan(app: FastAPI):
         name=cfg.get("name", "Странник"),
         character=character,
         llm=state.llm_client,
-        model_name=llm_cfg.get("model_name", "Sweaterdog/Andy-4"),
+        model_name=llm_cfg.get("model_name", "t-tech/T-lite-it-2.1:Q4_K_M"),
         stm_capacity=cfg.get("memory", {}).get("stm_capacity", 50),
         ltm_max_size=cfg.get("memory", {}).get("ltm_max_size", 1000),
         similarity_threshold=response_cfg.get("similarity_threshold", 0.8),
