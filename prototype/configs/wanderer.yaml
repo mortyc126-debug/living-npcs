@@ -44,9 +44,15 @@ response:
 # llama-server / Ollama endpoint
 # По умолчанию — Ollama на 11434 (проще ставится на Windows).
 # Для llama.cpp напрямую — поменять на http://localhost:8080
+#
+# Модель: t-tech/T-lite-it-2.1 — Qwen3-8B base, не-think вариант
+# (гарантированно без <think> блоков), нативно русский. ~5GB Q4_K_M.
+# `ollama pull t-tech/T-lite-it-2.1:Q4_K_M` перед стартом.
+# Andy-4 заброшен как fine-tune под Mindcraft-команды, ломал персону —
+# см. ADR-006 R3 + историю фиксов от 2026-04-28.
 llm:
   base_url: "http://localhost:11434"
-  model_name: "Sweaterdog/Andy-4"
+  model_name: "t-tech/T-lite-it-2.1:Q4_K_M"
   context_size: 8192
 
 # Сценарий запуска (для логов)

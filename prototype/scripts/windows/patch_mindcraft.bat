@@ -1,7 +1,8 @@
 @echo off
-REM Подменяет prismarine-viewer импорты в Mindcraft на заглушки.
-REM Это нужно потому что canvas/gl — нативные модули, требующие VS Build Tools.
-REM Странник в игре через viewer не отображается — мы смотрим через свой client.
+REM Подменяет в Mindcraft:
+REM   - prismarine-viewer (canvas/gl нативные модули — не нужны нам, ломают сборку)
+REM   - self_prompter (бесконечно гонит "Your next response MUST contain a command",
+REM     что превращает Living NPC в goal-driven assistant — см. ADR-006 R3)
 
 setlocal
 
@@ -16,6 +17,7 @@ set PATCH_DIR=%~dp0\..\..\patches\mindcraft
 
 set BV_TARGET=%MINDCRAFT_DIR%\src\agent\vision\browser_viewer.js
 set CAM_TARGET=%MINDCRAFT_DIR%\src\agent\vision\camera.js
+set SP_TARGET=%MINDCRAFT_DIR%\src\agent\self_prompter.js
 
 if not exist "%BV_TARGET%" (
     echo [!] Не нашёл %BV_TARGET%
@@ -25,14 +27,21 @@ if not exist "%CAM_TARGET%" (
     echo [!] Не нашёл %CAM_TARGET%
     exit /b 1
 )
+if not exist "%SP_TARGET%" (
+    echo [!] Не нашёл %SP_TARGET%
+    exit /b 1
+)
 
 REM Бэкапы оригиналов (один раз, не перетирая)
 if not exist "%BV_TARGET%.orig" copy /Y "%BV_TARGET%" "%BV_TARGET%.orig" >nul
 if not exist "%CAM_TARGET%.orig" copy /Y "%CAM_TARGET%" "%CAM_TARGET%.orig" >nul
+if not exist "%SP_TARGET%.orig" copy /Y "%SP_TARGET%" "%SP_TARGET%.orig" >nul
 
 copy /Y "%PATCH_DIR%\browser_viewer.stub.js" "%BV_TARGET%" >nul
 copy /Y "%PATCH_DIR%\camera.stub.js" "%CAM_TARGET%" >nul
+copy /Y "%PATCH_DIR%\self_prompter.stub.js" "%SP_TARGET%" >nul
 
-echo [OK] Vision-модули Mindcraft заглушены.
+echo [OK] Vision-модули заглушены.
+echo [OK] Self-prompter нейтрализован (Living NPC не "играет с целью", а живёт).
 echo     Оригиналы сохранены как .orig (на случай если захочешь вернуть).
 endlocal

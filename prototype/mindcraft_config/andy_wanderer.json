@@ -3,7 +3,7 @@
   "model": {
     "api": "openai",
     "url": "http://127.0.0.1:8090/v1",
-    "model": "Sweaterdog/Andy-4",
+    "model": "t-tech/T-lite-it-2.1:Q4_K_M",
     "params": {
       "temperature": 0.7,
       "max_tokens": 200
