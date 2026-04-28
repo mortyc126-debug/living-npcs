@@ -40,7 +40,11 @@ const settings = {
         "!savedPlaces",
         "!viewChest",
         "!searchForBlock",
-        "!searchForEntity"
+        "!searchForEntity",
+        "!setMode",
+        "!newAction",
+        "!setGoal",
+        "!endGoal"
     ],
     "code_timeout_mins": -1,
     "relevant_docs_count": 5,

@@ -24,12 +24,40 @@ INFO_COMMANDS = {
     "!savedPlaces", "!viewChest", "!searchForBlock", "!searchForEntity",
     "!checkBlueprint", "!checkBlueprintLevel",
     "!getBlueprint", "!getBlueprintLevel",
+    # Управление режимами/новый код — модель часто галлюцинирует
+    # несуществующие моды и зацикливается на ошибках.
+    "!setMode", "!newAction", "!setGoal", "!endGoal",
 }
 
 _CMD_RE = re.compile(r"!\w+(?:\([^)]*\))?", re.UNICODE)
 _TAIL_NOISE_RE = re.compile(r"[\*\$#]{2,}")
 _WS_RE = re.compile(r"\s{2,}")
 _PUNCT_RE = re.compile(r"[^\w\s]", re.UNICODE)
+
+# Andy-4 — это Llama-8B-R1 fine-tune, льёт reasoning в открытый текст.
+# Закрытые пары вырезаем целиком; "висячий" <think> без закрытия (max_tokens
+# обрезал хвост) — режем всё от тега до конца.
+_THINK_PAIR_RE = re.compile(
+    r"<think(?:ing)?>.*?</think(?:ing)?>",
+    re.DOTALL | re.IGNORECASE,
+)
+_THINK_OPEN_DANGLING_RE = re.compile(
+    r"<think(?:ing)?>.*\Z",
+    re.DOTALL | re.IGNORECASE,
+)
+# Иногда модель забывает открывающий тег и сразу пишет "</think>...".
+_THINK_CLOSE_LEADING_RE = re.compile(
+    r"\A.*?</think(?:ing)?>",
+    re.DOTALL | re.IGNORECASE,
+)
+
+
+def strip_reasoning(text: str) -> str:
+    """Убирает <think>...</think> и его варианты у R1-моделей."""
+    text = _THINK_PAIR_RE.sub("", text)
+    text = _THINK_CLOSE_LEADING_RE.sub("", text)
+    text = _THINK_OPEN_DANGLING_RE.sub("", text)
+    return text.strip()
 
 
 def strip_info_commands(text: str) -> str:
@@ -160,8 +188,11 @@ class CognitiveAgent:
             return "…"
         raw = choices[0].get("message", {}).get("content", "").strip()
 
-        # 1) Стрипим Mindcraft info-команды (главный источник self-loop).
-        cleaned = strip_info_commands(raw)
+        # 1a) Режем reasoning-теги (Andy-4 = Llama-R1 льёт <think> в открытый текст,
+        # внутри теряет identity и галлюцинирует имя другого бота).
+        cleaned = strip_reasoning(raw)
+        # 1b) Стрипим Mindcraft info-команды (главный источник self-loop).
+        cleaned = strip_info_commands(cleaned)
 
         # 2) Similarity drop ≥0.8 к последней содержательной реплике (П4 редуц.).
         # Пропускаем "…" — иначе спам, разбавленный молчанием, проходит фильтр.
